@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f4f4f9;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .data-list {
+            margin-top: 20px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .data-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>WebSocket Data Receiver</h1>
+        <button id="requestButton">Get Data</button>
+        <ul id="dataList" class="data-list"></ul>
+    </div>
+    <script type="module">
+        const requestButton = document.getElementById('requestButton');
+        const dataList = document.getElementById('dataList');
+        const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2Njg2MDJmZGRhZjY1OGJjM2NjYWQ3MCIsImlhdCI6MTcxODExNjYwM30.ZMMqzj-c6sNNFqxXrcZ0I0biogYJX-a8he_VIMtGMSY";
+        //Array of input-strings
+        const DATA_STREAMS = [
+            "Like 1 sha1re subscribe  *& @agt",
+            "gcbbsgs5ghs us6r3tvbbus7veb 357ebbfvd  d7e u735ge 837gb",
+            "gvsf bdhs fghs vbdf sdhs fbvs dfgh svdf bhsf gsvb hsdf gbvs dbfh svgs dfhb svfs gbhs dfgv hsbf shdf bsvf bbbb6bbbbbbbbbb",
+            "ybg6sb5g d7g35h5b gse57gb 837g fbv57fb",
+            "ghs fbvs dfsb hsdf svvv bhfs dhgs usbv fsds bhfs dfgs sbhs dbus vbsd fbdf shdf gbhs sdgb fhvs sbfs dbus  cccccccccccccc",
+            "r4e bvg dsf gs fv bd evb gh sdf7 bw vh sb vsd sdf gb ff ds gv dfs vbh ",
+            "h7w8 fv4b 5sdg 3f7g 8s3v 4b5h 3v7d fsdg 5b7f 8h4s 3v7f d6b8 w3s4 b7v5 df7s 3g4b 6h7f 8s5d 3v7b 3f7d ccccccccccccccc",
+            "w4g5 f3b7 sd6v 5h7g 4sd8 v3b5 f7d8 f4s3 g7v6 b5df 8h7f 3w6s 4b7d 8v5f s3b6 h7g4 w3v5 sd8f 7b3g 6v4d",
+            "nshf bvgs dfsv hdfg sbhf svbd fsdh vsfb hdfg svhs dfbs ghvs bfhv sdfb hsdf vghs fdbv shfv sbhd fsvb ghsf ccccccccccccccc",
+            "n7g4 s5v3 b8h7 w5d4 f8s3 v7g6 b5d7 s3h8 v4b5 g7f6 s4d8 w3v7 b5h4 g6s8 f3b7 d4v5 h8g6 s3b7 w4d5 v8s6",
+            "hsbv dfsh gsvd fbhv sdfb gsfb hvsd fsbh dfgs bshv dfvs hbgs fshv sbhf svdf bghs dfvs hfsd sbfv gsvb hsdf cccccccccccccccc",
+            "z7b3 s4g5 f8v6 w7d3 h5s4 g7v6 b8f3 d4h7 v5w3 s8b6 g5d4 v7f3 s6h5 b8w4 d3g7 v5f6 s4h8 b7w5 d4s3 g6f7 aaaaaaaaaaaaaaaa",
+            "m7f8 v5s3 h6w7 d4g8 v5b3 s4h7 f6w5 d3g8 b7s4 v5h6 f3w7 d4b8 s5g7 v6f4 h5s3 w8d7 b4g6 v5f7 s8h4 w3d6 bbbbbbbbbbbbbbbbbbb",
+            "hsbv dfsh gsvd fbhv sdfb gsfb hvsd fsbh dfgs bshv dfvs hbgs fshv sbhf svdf bghs dfvs hfsd sbfv gsvb hsdf aaaaaaaaaaaaaaaaaa",
+        ]
+
+        // WebSocket setup
+        const ws = new WebSocket(`ws://127.0.0.1:3000/api/websocket`);
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket server');
+            ws.send(JSON.stringify({ type: 'auth', token: jwt }));
+        };
+
+        ws.onmessage = (event) => {
+            console.log('Received:', event.data);
+            displayData(JSON.parse(event.data));
+        };
+        
+        //Closing connection
+        ws.onclose = (event) => {
+            console.log('Disconnected from WebSocket server : ', event.reason);
+        };
+
+        // Sending request to server on button click
+        requestButton.addEventListener('click', () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(DATA_STREAMS));
+            } else {
+                alert('WebSocket connection is not open');
+            }
+        });
+
+        //Displaying data in a formatted way
+        function displayData(data) {
+            if (data.type == 'auth') return;
+            console.log(data);
+            dataList.innerHTML = '';
+            data.forEach((item, indx) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `String ${indx + 1}:   [`;
+                item.forEach((item, index) => {
+                    if (item == true) {
+                        listItem.innerHTML += `Rule <b>${index + 1}</b> : Passed , `;
+                    } else {
+                        listItem.innerHTML += `Rule <b>${index + 1}</b> : Failed , `;
+                    }
+                });
+                listItem.innerHTML += ']';
+                dataList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+
+</html>
